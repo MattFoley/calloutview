@@ -19,8 +19,8 @@
 NSTimeInterval kSMCalloutViewRepositionDelayForUIScrollView = 1.0/3.0;
 
 #define CALLOUT_MIN_WIDTH 75 // our background graphics limit us to this minimum width...
-#define CALLOUT_HEIGHT 70 // ...and allow only for this exact height.
-#define CALLOUT_DEFAULT_WIDTH 153 // default "I give up" width when we are asked to present in a space less than our min width
+#define CALLOUT_HEIGHT 130 // ...and allow only for this exact height.
+#define CALLOUT_DEFAULT_WIDTH 130 // default "I give up" width when we are asked to present in a space less than our min width
 #define TITLE_MARGIN 17 // the title view's normal horizontal margin from the edges of our callout view
 #define TITLE_TOP 11 // the top of the title view when no subtitle is present
 #define TITLE_SUB_TOP 3 // the top of the title view when a subtitle IS present
@@ -37,11 +37,17 @@ NSTimeInterval kSMCalloutViewRepositionDelayForUIScrollView = 1.0/3.0;
 #define BOTTOM_ANCHOR_MARGIN 10 // if using a bottom anchor, we'll need to account for the shadow below the "tip"
 #define CONTENT_MARGIN 10 // when we try to reposition content to be visible, we'll consider this margin around your target rect
 
+<<<<<<< HEAD
 #define TOP_SHADOW_BUFFER 2 // height offset buffer to account for top shadow
 #define BOTTOM_SHADOW_BUFFER 5 // height offset buffer to account for bottom shadow
 #define OFFSET_FROM_ORIGIN 5 // distance to offset vertically from the rect origin of the callout
 #define ANCHOR_HEIGHT 14 // height to use for the anchor
 #define ANCHOR_MARGIN_MIN 24 // the smallest possible distance from the edge of our control to the edge of the anchor, from either left or right
+=======
+@interface SMCalloutView ()
+@property (nonatomic, readwrite) SMCalloutArrowDirection currentArrowDirection;
+@end
+>>>>>>> master
 
 @implementation SMCalloutView {
     UILabel *titleLabel, *subtitleLabel;
@@ -72,8 +78,10 @@ NSTimeInterval kSMCalloutViewRepositionDelayForUIScrollView = 1.0/3.0;
             titleLabel.backgroundColor = [UIColor clearColor];
             titleLabel.font = [UIFont boldSystemFontOfSize:17];
             titleLabel.textColor = [UIColor whiteColor];
+            titleLabel.numberOfLines = 0;
             titleLabel.shadowColor = [UIColor colorWithWhite:0 alpha:0.5];
             titleLabel.shadowOffset = CGSizeMake(0, -1);
+            titleLabel.autoresizingMask = nil;
         }
         return titleLabel;
     }
@@ -216,11 +224,19 @@ NSTimeInterval kSMCalloutViewRepositionDelayForUIScrollView = 1.0/3.0;
     [self rebuildSubviews];
     
     // apply title/subtitle (if present
+    self.title = [self.title stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     titleLabel.text = self.title;
     subtitleLabel.text = self.subtitle;
+    [titleLabel setFrame:CGRectMake(0, 0, CALLOUT_DEFAULT_WIDTH, CALLOUT_HEIGHT)];
+    [titleLabel sizeToFit];
+    
+    if (titleLabel.frame.size.width > CALLOUT_DEFAULT_WIDTH) {
+        CGSize size =  [titleLabel.text sizeWithFont:titleLabel.font constrainedToSize:CGSizeMake(CALLOUT_DEFAULT_WIDTH, CALLOUT_HEIGHT) lineBreakMode:NSLineBreakByWordWrapping];
+        [titleLabel setFrame:CGRectMake(0, 0, size.width+20, size.height+20)];
+    }
     
     // size the callout to fit the width constraint as best as possible
-    self.$size = [self sizeThatFits:CGSizeMake(constrainedRect.size.width, self.calloutHeight + 10)];
+    self.$size = [self sizeThatFits:CGSizeMake(constrainedRect.size.width, titleLabel.frame.size.height+30)];
     
     // how much room do we have in the constraint box, both above and below our target rect?
     CGFloat topSpace = CGRectGetMinY(rect) - CGRectGetMinY(constrainedRect);
@@ -270,6 +286,8 @@ NSTimeInterval kSMCalloutViewRepositionDelayForUIScrollView = 1.0/3.0;
         .x = calloutX + adjustX,
         .y = bestDirection == SMCalloutArrowDirectionDown ? (anchorY - self.calloutHeight + BOTTOM_ANCHOR_MARGIN) : anchorY
     };
+    
+    self.currentArrowDirection = bestDirection;
     
     self.$origin = calloutOrigin;
     
@@ -321,14 +339,22 @@ NSTimeInterval kSMCalloutViewRepositionDelayForUIScrollView = 1.0/3.0;
     BOOL presenting = [[anim valueForKey:@"presenting"] boolValue];
 
     if (presenting)
+    {
+        [titleLabel sizeToFit];
+        if (titleLabel.frame.size.width > CALLOUT_DEFAULT_WIDTH) {
+            CGSize size =  [titleLabel.text sizeWithFont:titleLabel.font constrainedToSize:CGSizeMake(CALLOUT_DEFAULT_WIDTH, CALLOUT_HEIGHT) lineBreakMode:NSLineBreakByWordWrapping];
+            [titleLabel setFrame:CGRectMake(0, 0, size.width+20, size.height+20)];
+        }
         // ok, animation is on, let's make ourselves visible!
         self.hidden = NO;
+    }
 }
 
 - (void)animationDidStop:(CAAnimation *)anim finished:(BOOL)finished {
     BOOL presenting = [[anim valueForKey:@"presenting"] boolValue];
     
     if (presenting) {
+
         if ([_delegate respondsToSelector:@selector(calloutViewDidAppear:)])
             [_delegate calloutViewDidAppear:self];
     }
