@@ -37,17 +37,17 @@ NSTimeInterval kSMCalloutViewRepositionDelayForUIScrollView = 1.0/3.0;
 #define BOTTOM_ANCHOR_MARGIN 10 // if using a bottom anchor, we'll need to account for the shadow below the "tip"
 #define CONTENT_MARGIN 10 // when we try to reposition content to be visible, we'll consider this margin around your target rect
 
-<<<<<<< HEAD
+
 #define TOP_SHADOW_BUFFER 2 // height offset buffer to account for top shadow
 #define BOTTOM_SHADOW_BUFFER 5 // height offset buffer to account for bottom shadow
 #define OFFSET_FROM_ORIGIN 5 // distance to offset vertically from the rect origin of the callout
 #define ANCHOR_HEIGHT 14 // height to use for the anchor
 #define ANCHOR_MARGIN_MIN 24 // the smallest possible distance from the edge of our control to the edge of the anchor, from either left or right
-=======
+
 @interface SMCalloutView ()
 @property (nonatomic, readwrite) SMCalloutArrowDirection currentArrowDirection;
 @end
->>>>>>> master
+
 
 @implementation SMCalloutView {
     UILabel *titleLabel, *subtitleLabel;
@@ -229,7 +229,7 @@ NSTimeInterval kSMCalloutViewRepositionDelayForUIScrollView = 1.0/3.0;
     subtitleLabel.text = self.subtitle;
     [titleLabel setFrame:CGRectMake(0, 0, CALLOUT_DEFAULT_WIDTH, CALLOUT_HEIGHT)];
     [titleLabel sizeToFit];
-    
+    [titleLabel setAutoresizingMask:UIViewAutoresizingFlexibleBottomMargin|UIViewAutoresizingFlexibleRightMargin];
     if (titleLabel.frame.size.width > CALLOUT_DEFAULT_WIDTH) {
         CGSize size =  [titleLabel.text sizeWithFont:titleLabel.font constrainedToSize:CGSizeMake(CALLOUT_DEFAULT_WIDTH, CALLOUT_HEIGHT) lineBreakMode:NSLineBreakByWordWrapping];
         [titleLabel setFrame:CGRectMake(0, 0, size.width+20, size.height+20)];
@@ -340,11 +340,13 @@ NSTimeInterval kSMCalloutViewRepositionDelayForUIScrollView = 1.0/3.0;
 
     if (presenting)
     {
-        [titleLabel sizeToFit];
-        if (titleLabel.frame.size.width > CALLOUT_DEFAULT_WIDTH) {
-            CGSize size =  [titleLabel.text sizeWithFont:titleLabel.font constrainedToSize:CGSizeMake(CALLOUT_DEFAULT_WIDTH, CALLOUT_HEIGHT) lineBreakMode:NSLineBreakByWordWrapping];
-            [titleLabel setFrame:CGRectMake(0, 0, size.width+20, size.height+20)];
-        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [titleLabel sizeToFit];
+            if (titleLabel.frame.size.width > CALLOUT_DEFAULT_WIDTH) {
+                CGSize size =  [titleLabel.text sizeWithFont:titleLabel.font constrainedToSize:CGSizeMake(CALLOUT_DEFAULT_WIDTH, CALLOUT_HEIGHT) lineBreakMode:NSLineBreakByWordWrapping];
+                [titleLabel setFrame:CGRectMake(0, 0, size.width+20, size.height+20)];
+            }
+        });
         // ok, animation is on, let's make ourselves visible!
         self.hidden = NO;
     }
@@ -366,6 +368,13 @@ NSTimeInterval kSMCalloutViewRepositionDelayForUIScrollView = 1.0/3.0;
         if ([_delegate respondsToSelector:@selector(calloutViewDidDisappear:)])
             [_delegate calloutViewDidDisappear:self];
     }
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [titleLabel sizeToFit];
+        if (titleLabel.frame.size.width > CALLOUT_DEFAULT_WIDTH) {
+            CGSize size =  [titleLabel.text sizeWithFont:titleLabel.font constrainedToSize:CGSizeMake(CALLOUT_DEFAULT_WIDTH, CALLOUT_HEIGHT) lineBreakMode:NSLineBreakByWordWrapping];
+            [titleLabel setFrame:CGRectMake(0, 0, size.width+20, size.height+20)];
+        }
+    });
 }
 
 - (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event {
