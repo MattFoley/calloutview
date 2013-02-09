@@ -341,11 +341,13 @@ NSTimeInterval kSMCalloutViewRepositionDelayForUIScrollView = 1.0/3.0;
     if (presenting)
     {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [titleLabel sizeToFit];
-            if (titleLabel.frame.size.width > CALLOUT_DEFAULT_WIDTH) {
+            //[titleLabel sizeToFit];
+            //if (titleLabel.frame.size.width > CALLOUT_DEFAULT_WIDTH) {
                 CGSize size =  [titleLabel.text sizeWithFont:titleLabel.font constrainedToSize:CGSizeMake(CALLOUT_DEFAULT_WIDTH, CALLOUT_HEIGHT) lineBreakMode:NSLineBreakByWordWrapping];
                 [titleLabel setFrame:CGRectMake(0, 0, size.width+20, size.height+20)];
-            }
+                [titleLabel setCenter:CGPointMake(self.frame.size.width/2, self.frame.size.height/2)];
+            //}
+            
         });
         // ok, animation is on, let's make ourselves visible!
         self.hidden = NO;
@@ -368,13 +370,13 @@ NSTimeInterval kSMCalloutViewRepositionDelayForUIScrollView = 1.0/3.0;
         if ([_delegate respondsToSelector:@selector(calloutViewDidDisappear:)])
             [_delegate calloutViewDidDisappear:self];
     }
-    dispatch_async(dispatch_get_main_queue(), ^{
+    /*dispatch_async(dispatch_get_main_queue(), ^{
         [titleLabel sizeToFit];
         if (titleLabel.frame.size.width > CALLOUT_DEFAULT_WIDTH) {
             CGSize size =  [titleLabel.text sizeWithFont:titleLabel.font constrainedToSize:CGSizeMake(CALLOUT_DEFAULT_WIDTH, CALLOUT_HEIGHT) lineBreakMode:NSLineBreakByWordWrapping];
             [titleLabel setFrame:CGRectMake(0, 0, size.width+20, size.height+20)];
         }
-    });
+    });*/
 }
 
 - (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event {
@@ -464,13 +466,15 @@ NSTimeInterval kSMCalloutViewRepositionDelayForUIScrollView = 1.0/3.0;
     // if we're pointing up, we'll need to push almost everything down a bit
     CGFloat dy = arrowDirection == SMCalloutArrowDirectionUp ? TOP_ANCHOR_MARGIN : 0;
     
-    self.titleViewOrDefault.$x = self.innerContentMarginLeft;
-    self.titleViewOrDefault.$y = (self.subtitleView || self.subtitle.length ? TITLE_SUB_TOP : TITLE_TOP) + dy;
-    self.titleViewOrDefault.$width = self.$width - self.innerContentMarginLeft - self.innerContentMarginRight;
+
+        self.titleViewOrDefault.$x = self.innerContentMarginLeft;
+        self.titleViewOrDefault.$y = self.titleViewOrDefault.$y - BOTTOM_ANCHOR_MARGIN;
+        self.titleViewOrDefault.$width = self.$width - self.innerContentMarginLeft - self.innerContentMarginRight;
+        
+        self.subtitleViewOrDefault.$x = self.titleViewOrDefault.$x;
+        self.subtitleViewOrDefault.$y = SUBTITLE_TOP + dy;
+        self.subtitleViewOrDefault.$width = self.titleViewOrDefault.$width;
     
-    self.subtitleViewOrDefault.$x = self.titleViewOrDefault.$x;
-    self.subtitleViewOrDefault.$y = SUBTITLE_TOP + dy;
-    self.subtitleViewOrDefault.$width = self.titleViewOrDefault.$width;
     
     self.leftAccessoryView.$x = ACCESSORY_MARGIN;
     if (self.contentView)
